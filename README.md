@@ -288,6 +288,25 @@ All data is automatically scoped by `orgId` from the JWT token:
 
 ## API Documentation
 
+### Swagger UI (Interactive Documentation)
+
+This project includes interactive API documentation powered by **Swagger/OpenAPI**:
+
+- **Swagger UI:** http://localhost:8000/api/documentation
+- **OpenAPI JSON:** http://localhost:8000/docs
+
+Features:
+- Browse all available endpoints
+- View request/response schemas
+- Test API calls directly from the browser
+- JWT Bearer token authentication support
+
+To regenerate documentation after code changes:
+```bash
+cd backend
+php artisan l5-swagger:generate
+```
+
 ### Base URL
 
 ```
@@ -506,18 +525,17 @@ Given more time, the following enhancements would be prioritized:
 ### High Priority
 1. **Unit & Integration Tests** - PHPUnit tests for services and API endpoints
 2. **WebSocket Integration** - Real-time notifications via Laravel Echo
-3. **API Documentation** - Swagger/OpenAPI specification with Postman collection
 
 ### Medium Priority
-4. **Docker Setup** - Dockerfile and docker-compose for containerization
-5. **Caching Layer** - Redis caching for frequently accessed data
-6. **Activity Feed** - Expose activity logs via API
+3. **Docker Setup** - Dockerfile and docker-compose for containerization
+4. **Caching Layer** - Redis caching for frequently accessed data
+5. **Activity Feed** - Expose activity logs via API
 
 ### Nice to Have
-7. **@mentions** - Parse and notify mentioned users in comments
-8. **File Attachments** - S3 integration for task attachments
-9. **Email Notifications** - Queue-based email delivery
-10. **Skeleton Loaders** - Better loading UX in frontend
+6. **@mentions** - Parse and notify mentioned users in comments
+7. **File Attachments** - S3 integration for task attachments
+8. **Email Notifications** - Queue-based email delivery
+9. **Skeleton Loaders** - Better loading UX in frontend
 
 ---
 
