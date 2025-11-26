@@ -123,4 +123,13 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | JWT Configuration
+    |--------------------------------------------------------------------------
+    */
+
+    'jwt_secret' => env('JWT_SECRET', 'your-256-bit-secret-key-here'),
+    'jwt_ttl' => env('JWT_TTL', 60),
+
 ];
