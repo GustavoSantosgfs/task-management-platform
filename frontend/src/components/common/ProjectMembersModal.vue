@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useProjectsStore } from '@/stores/projects'
+import Swal from 'sweetalert2'
 import type { Project, User } from '@/types'
 
 const props = defineProps<{
@@ -26,13 +27,32 @@ function handleClose(): void {
 }
 
 function removeMember(member: User): void {
-  if (!confirm(`Remove ${member.name} from this project?`)) return
-
-  loading.value = true
-  projectsStore.removeMember(props.project.id, member.id)
-    .finally(() => {
-      loading.value = false
-    })
+  Swal.fire({
+    title: 'Remove Member?',
+    text: `Remove ${member.name} from this project?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, remove'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      loading.value = true
+      projectsStore.removeMember(props.project.id, member.id)
+        .then(() => {
+          Swal.fire({
+            title: 'Removed!',
+            text: `${member.name} has been removed from the project.`,
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          })
+        })
+        .finally(() => {
+          loading.value = false
+        })
+    }
+  })
 }
 
 function getRoleBadgeClass(role: string): string {

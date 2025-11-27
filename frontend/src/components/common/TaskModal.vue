@@ -3,6 +3,7 @@ import { ref, onMounted, computed, watch } from 'vue'
 import { useTasksStore } from '@/stores/tasks'
 import { useProjectsStore } from '@/stores/projects'
 import { useAuthStore } from '@/stores/auth'
+import Swal from 'sweetalert2'
 import type { TaskStatus, TaskPriority, UpdateTaskData } from '@/types'
 
 const props = defineProps<{
@@ -126,9 +127,19 @@ function submitComment(): void {
 }
 
 function deleteComment(commentId: number): void {
-  if (confirm('Are you sure you want to delete this comment?')) {
-    tasksStore.deleteComment(props.projectId, props.taskId, commentId)
-  }
+  Swal.fire({
+    title: 'Delete Comment?',
+    text: 'Are you sure you want to delete this comment?',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, delete it'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      tasksStore.deleteComment(props.projectId, props.taskId, commentId)
+    }
+  })
 }
 
 function formatDate(dateString: string): string {

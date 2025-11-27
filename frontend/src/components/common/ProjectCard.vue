@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useProjectsStore } from '@/stores/projects'
 import { useAuthStore } from '@/stores/auth'
+import Swal from 'sweetalert2'
 import type { Project } from '@/types'
 
 const props = defineProps<{
@@ -39,25 +40,69 @@ function navigateToProject(): void {
 }
 
 function handleDelete(): void {
-  if (confirm('Are you sure you want to archive this project?')) {
-    projectsStore.deleteProject(props.project.id)
-      .then(() => {
-        emit('deleted')
-      })
-      .catch(() => {
-        // Error handled by store
-      })
-  }
+  Swal.fire({
+    title: 'Archive Project?',
+    text: `Are you sure you want to archive "${props.project.title}"?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#dc3545',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, archive it'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      projectsStore.deleteProject(props.project.id)
+        .then(() => {
+          emit('deleted')
+          Swal.fire({
+            title: 'Archived!',
+            text: 'Project has been archived.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          })
+        })
+        .catch(() => {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to archive project.',
+            icon: 'error'
+          })
+        })
+    }
+  })
 }
 
 function handleRestore(): void {
-  projectsStore.restoreProject(props.project.id)
-    .then(() => {
-      emit('deleted')
-    })
-    .catch(() => {
-      // Error handled by store
-    })
+  Swal.fire({
+    title: 'Restore Project?',
+    text: `Are you sure you want to restore "${props.project.title}"?`,
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#198754',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Yes, restore it'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      projectsStore.restoreProject(props.project.id)
+        .then(() => {
+          emit('deleted')
+          Swal.fire({
+            title: 'Restored!',
+            text: 'Project has been restored.',
+            icon: 'success',
+            timer: 1500,
+            showConfirmButton: false
+          })
+        })
+        .catch(() => {
+          Swal.fire({
+            title: 'Error!',
+            text: 'Failed to restore project.',
+            icon: 'error'
+          })
+        })
+    }
+  })
 }
 
 function formatDate(dateString: string | null): string {
