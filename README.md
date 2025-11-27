@@ -15,6 +15,8 @@ A cloud-based Task Management & Collaboration Platform built with Laravel 12 (PH
 - [Database Schema](#database-schema)
 - [Design Patterns & Principles](#design-patterns--principles)
 - [Security](#security)
+- [Testing](#testing)
+- [AWS Deployment Guide](#aws-deployment-guide)
 - [Future Improvements](#future-improvements)
 
 ---
@@ -516,28 +518,51 @@ Frontend stores JWT in localStorage with automatic:
 
 ---
 
-## Future Improvements
+## Testing
 
-Given more time, the following enhancements would be prioritized:
+The project includes comprehensive API integration tests using PHPUnit with Laravel's testing utilities.
 
-### High Priority
-1. **Unit & Integration Tests** - PHPUnit tests for services and API endpoints
-2. **WebSocket Integration** - Real-time notifications via Laravel Echo
+### Test Coverage
 
-### Medium Priority
-3. **Docker Setup** - Dockerfile and docker-compose for containerization
-4. **Caching Layer** - Redis caching for frequently accessed data
-5. **Activity Feed** - Expose activity logs via API
+| Test Suite | Tests | Assertions |
+|------------|-------|------------|
+| AuthControllerTest | 17 | - |
+| NotificationControllerTest | 17 | - |
+| ProjectControllerTest | 28 | - |
+| TaskControllerTest | 30 | - |
+| **Total** | **92** | **286** |
 
-### Nice to Have
-6. **@mentions** - Parse and notify mentioned users in comments
-7. **File Attachments** - S3 integration for task attachments
-8. **Email Notifications** - Queue-based email delivery
-9. **Skeleton Loaders** - Better loading UX in frontend
+### Test Categories
 
----
+**Authentication Tests:**
+- Login with valid/invalid credentials
+- Token validation and expiration
+- Role-based authentication (admin, project_manager, member)
+- Multi-organization user login
 
-## Running Tests
+**Project Tests:**
+- CRUD operations (create, read, update, delete)
+- Filtering by status, visibility
+- Pagination
+- Member management (add, remove)
+- Soft delete and restore
+- Role-based access control
+
+**Task Tests:**
+- CRUD operations within projects
+- Filtering by status, priority
+- Assignee management
+- Task dependencies (add, remove, self-reference prevention)
+- Task comments (CRUD)
+- My Tasks endpoint
+
+**Notification Tests:**
+- List and filter notifications
+- Mark as read/unread
+- Delete notifications
+- User isolation (users only see own notifications)
+
+### Running Tests
 
 ```bash
 cd backend
@@ -545,12 +570,253 @@ cd backend
 # Run all tests
 php artisan test
 
-# Run with coverage
-php artisan test --coverage
+# Run API tests only
+php artisan test --filter=Api
 
-# Run specific test
-php artisan test --filter=AuthServiceTest
+# Run specific test class
+php artisan test --filter=TaskControllerTest
+
+# Run with verbose output
+php artisan test --filter=Api -v
 ```
+
+---
+
+## AWS Deployment Guide
+
+This guide outlines deploying the Task Management Platform to AWS infrastructure.
+
+### Architecture Overview
+
+```
+                    ┌─────────────────┐
+                    │   Route 53      │
+                    │   (DNS)         │
+                    └────────┬────────┘
+                             │
+                    ┌────────▼────────┐
+                    │   CloudFront    │
+                    │   (CDN)         │
+                    └────────┬────────┘
+                             │
+         ┌───────────────────┼───────────────────┐
+         │                   │                   │
+┌────────▼────────┐ ┌────────▼────────┐ ┌───────▼───────┐
+│     S3          │ │ Application     │ │    RDS        │
+│ (Vue Frontend)  │ │ Load Balancer   │ │   (MySQL)     │
+└─────────────────┘ └────────┬────────┘ └───────────────┘
+                             │
+                    ┌────────▼────────┐
+                    │   ECS Fargate   │
+                    │ (Laravel API)   │
+                    └─────────────────┘
+```
+
+### Prerequisites
+
+- AWS Account with appropriate permissions
+- AWS CLI configured
+- Docker installed locally
+- Domain name (optional, for custom domain)
+
+### Step 1: Database Setup (RDS)
+
+1. **Create RDS MySQL Instance:**
+```bash
+aws rds create-db-instance \
+  --db-instance-identifier task-management-db \
+  --db-instance-class db.t3.micro \
+  --engine mysql \
+  --engine-version 8.0 \
+  --master-username admin \
+  --master-user-password <your-password> \
+  --allocated-storage 20 \
+  --vpc-security-group-ids <sg-id> \
+  --db-name task_management \
+  --backup-retention-period 7 \
+  --multi-az false
+```
+
+2. **Configure Security Group** to allow inbound MySQL (port 3306) from your ECS tasks.
+
+### Step 2: Backend Deployment (ECS Fargate)
+
+1. **Create ECR Repository:**
+```bash
+aws ecr create-repository --repository-name task-management-api
+```
+
+2. **Build and Push Docker Image:**
+```bash
+# From backend directory
+docker build -t task-management-api .
+
+# Tag and push
+aws ecr get-login-password --region <region> | docker login --username AWS --password-stdin <account-id>.dkr.ecr.<region>.amazonaws.com
+docker tag task-management-api:latest <account-id>.dkr.ecr.<region>.amazonaws.com/task-management-api:latest
+docker push <account-id>.dkr.ecr.<region>.amazonaws.com/task-management-api:latest
+```
+
+3. **Create ECS Cluster and Service:**
+```bash
+# Create cluster
+aws ecs create-cluster --cluster-name task-management-cluster
+
+# Create task definition (see task-definition.json below)
+aws ecs register-task-definition --cli-input-json file://task-definition.json
+
+# Create service with ALB
+aws ecs create-service \
+  --cluster task-management-cluster \
+  --service-name task-management-api \
+  --task-definition task-management-api \
+  --desired-count 2 \
+  --launch-type FARGATE \
+  --network-configuration "awsvpcConfiguration={subnets=[<subnet-ids>],securityGroups=[<sg-id>],assignPublicIp=ENABLED}"
+```
+
+4. **Sample task-definition.json:**
+```json
+{
+  "family": "task-management-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "containerDefinitions": [{
+    "name": "api",
+    "image": "<account-id>.dkr.ecr.<region>.amazonaws.com/task-management-api:latest",
+    "portMappings": [{"containerPort": 80}],
+    "environment": [
+      {"name": "APP_ENV", "value": "production"},
+      {"name": "DB_CONNECTION", "value": "mysql"},
+      {"name": "DB_HOST", "value": "<rds-endpoint>"},
+      {"name": "DB_DATABASE", "value": "task_management"},
+      {"name": "DB_USERNAME", "value": "admin"}
+    ],
+    "secrets": [
+      {"name": "APP_KEY", "valueFrom": "<secrets-manager-arn>:APP_KEY::"},
+      {"name": "DB_PASSWORD", "valueFrom": "<secrets-manager-arn>:DB_PASSWORD::"},
+      {"name": "JWT_SECRET", "valueFrom": "<secrets-manager-arn>:JWT_SECRET::"}
+    ],
+    "logConfiguration": {
+      "logDriver": "awslogs",
+      "options": {
+        "awslogs-group": "/ecs/task-management-api",
+        "awslogs-region": "<region>",
+        "awslogs-stream-prefix": "ecs"
+      }
+    }
+  }]
+}
+```
+
+### Step 3: Frontend Deployment (S3 + CloudFront)
+
+1. **Build Frontend:**
+```bash
+cd frontend
+npm run build
+```
+
+2. **Create S3 Bucket:**
+```bash
+aws s3 mb s3://task-management-frontend-<unique-id>
+aws s3 website s3://task-management-frontend-<unique-id> --index-document index.html --error-document index.html
+```
+
+3. **Upload Build:**
+```bash
+aws s3 sync dist/ s3://task-management-frontend-<unique-id> --delete
+```
+
+4. **Create CloudFront Distribution:**
+```bash
+aws cloudfront create-distribution \
+  --origin-domain-name task-management-frontend-<unique-id>.s3.amazonaws.com \
+  --default-root-object index.html
+```
+
+### Step 4: Environment Configuration
+
+**Backend Environment Variables (AWS Secrets Manager):**
+```
+APP_KEY=base64:...
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.yourdomain.com
+
+DB_CONNECTION=mysql
+DB_HOST=<rds-endpoint>
+DB_PORT=3306
+DB_DATABASE=task_management
+DB_USERNAME=admin
+DB_PASSWORD=<secure-password>
+
+JWT_SECRET=<random-string>
+JWT_TTL=60
+```
+
+**Frontend Environment (.env.production):**
+```
+VITE_API_URL=https://api.yourdomain.com/api
+```
+
+### Step 5: Run Migrations
+
+```bash
+# Connect to ECS task and run migrations
+aws ecs execute-command \
+  --cluster task-management-cluster \
+  --task <task-id> \
+  --container api \
+  --interactive \
+  --command "/bin/sh -c 'php artisan migrate --force'"
+```
+
+### Cost Estimation (Monthly)
+
+| Service | Configuration | Estimated Cost |
+|---------|---------------|----------------|
+| RDS MySQL | db.t3.micro | ~$15 |
+| ECS Fargate | 2 tasks (256 CPU, 512 MB) | ~$20 |
+| S3 | Static hosting | ~$1 |
+| CloudFront | 100GB transfer | ~$10 |
+| ALB | 1 load balancer | ~$16 |
+| **Total** | | **~$62/month** |
+
+### Alternative: Simplified Deployment (EC2)
+
+For cost-sensitive deployments, use a single EC2 instance:
+
+```bash
+# Launch t3.small with Amazon Linux 2
+# Install: PHP 8.2, Nginx, MySQL client, Node.js
+# Clone repo, configure .env, run migrations
+# Use systemd for process management
+# Estimated cost: ~$15/month
+```
+
+---
+
+## Future Improvements
+
+Given more time, the following enhancements would be prioritized:
+
+### High Priority
+1. **WebSocket Integration** - Real-time notifications via Laravel Echo
+2. **Docker Setup** - Dockerfile and docker-compose for containerization
+
+### Medium Priority
+3. **Caching Layer** - Redis caching for frequently accessed data
+4. **Activity Feed** - Expose activity logs via API
+5. **Unit Tests** - Additional unit tests for services and repositories
+
+### Nice to Have
+6. **@mentions** - Parse and notify mentioned users in comments
+7. **File Attachments** - S3 integration for task attachments
+8. **Email Notifications** - Queue-based email delivery
+9. **Skeleton Loaders** - Better loading UX in frontend
 
 ---
 
