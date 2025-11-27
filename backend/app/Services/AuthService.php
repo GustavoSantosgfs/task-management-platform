@@ -44,11 +44,24 @@ class AuthService
 
         $mockUser = $this->findMockUserById($payload['sub']);
 
-        if (!$mockUser) {
-            return null;
+        if ($mockUser) {
+            return $this->formatUserResponse($mockUser);
         }
 
-        return $this->formatUserResponse($mockUser);
+        $dbUser = User::find($payload['sub']);
+        if ($dbUser) {
+            $orgUser = $dbUser->organizationUsers()->first();
+            return [
+                'id' => $dbUser->id,
+                'name' => $dbUser->name,
+                'email' => $dbUser->email,
+                'role' => $payload['role'] ?? $orgUser?->role ?? 'member',
+                'orgId' => $payload['orgId'] ?? $orgUser?->organization_id ?? 1,
+                'avatar' => $dbUser->avatar,
+            ];
+        }
+
+        return null;
     }
 
     public function getFullUserFromToken(string $token): ?array

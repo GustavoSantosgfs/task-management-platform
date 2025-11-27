@@ -17,8 +17,8 @@ class StoreTaskRequest extends FormRequest
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
             'assignee_id' => 'nullable|integer|exists:users,id',
-            'priority' => 'nullable|in:low,medium,high,urgent',
-            'status' => 'nullable|in:todo,in_progress,in_review,done,blocked',
+            'priority' => 'nullable|in:low,medium,high,critical',
+            'status' => 'nullable|in:backlog,todo,in_progress,review,done,blocked',
             'due_date' => 'nullable|date',
             'due_date_timezone' => 'nullable|string|max:50',
             'position' => 'nullable|integer|min:0',
@@ -30,8 +30,8 @@ class StoreTaskRequest extends FormRequest
         return [
             'title.required' => 'Task title is required',
             'title.max' => 'Task title cannot exceed 255 characters',
-            'priority.in' => 'Priority must be one of: low, medium, high, urgent',
-            'status.in' => 'Status must be one of: todo, in_progress, in_review, done, blocked',
+            'priority.in' => 'Priority must be one of: low, medium, high, critical',
+            'status.in' => 'Status must be one of: backlog, todo, in_progress, review, done, blocked',
             'assignee_id.exists' => 'Selected assignee does not exist',
         ];
     }
