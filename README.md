@@ -524,7 +524,7 @@ The project includes comprehensive tests using PHPUnit with Laravel's testing ut
 
 ### Test Coverage
 
-#### Unit Tests (Service Layer)
+#### Unit Tests (Services & Models)
 | Test Suite | Tests | Description |
 |------------|-------|-------------|
 | JwtServiceTest | 11 | Token encoding, decoding, validation, expiration |
@@ -532,7 +532,11 @@ The project includes comprehensive tests using PHPUnit with Laravel's testing ut
 | ProjectServiceTest | 21 | Access control, member management, CRUD logic |
 | TaskServiceTest | 29 | Task operations, dependencies, comments, permissions |
 | NotificationServiceTest | 20 | Notification CRUD, helper methods |
-| **Unit Total** | **95** | |
+| OrganizationTest | 8 | Organization relationships, role-based user queries |
+| OrganizationUserTest | 9 | Role checks (isAdmin, isManager, isMember) |
+| ProjectMemberTest | 3 | Project-user relationship |
+| TaskDependencyTest | 3 | Task dependency relationships |
+| **Unit Total** | **117** | |
 
 #### Integration Tests (API Endpoints)
 | Test Suite | Tests | Description |
@@ -543,17 +547,18 @@ The project includes comprehensive tests using PHPUnit with Laravel's testing ut
 | TaskControllerTest | 30 | Task CRUD + dependencies + comments |
 | **Integration Total** | **92** | |
 
-| **Grand Total** | **187 tests** | **481 assertions** |
+| **Grand Total** | **209 tests** | **516 assertions** |
 
 ### Test Categories
 
-**Unit Tests (Business Logic):**
+**Unit Tests (Business Logic & Models):**
 - JWT token creation, validation, and expiration
 - Authentication flow with mock users and database users
 - Project access control (admin, manager, member roles)
 - Task dependency management with circular dependency detection
 - Comment ownership validation
 - Notification helper methods
+- Model relationships and role-checking methods
 
 **Integration Tests (API Endpoints):**
 - Authentication: Login, logout, token validation
@@ -578,6 +583,54 @@ php artisan test --filter=TaskControllerTest
 # Run with verbose output
 php artisan test --filter=Api -v
 ```
+
+### Code Coverage Report
+
+**Target: 80%+ code coverage** ✓ **Achieved: 87.1%**
+
+| Category | Coverage |
+|----------|----------|
+| Services | 92-100% |
+| Controllers | 89-98% |
+| Models | 71-100% |
+| Repositories | 69-75% |
+| Resources | 100% |
+| **Total** | **87.1%** |
+
+To generate coverage reports, you need PCOV or Xdebug installed:
+
+```bash
+# Install PCOV (Ubuntu/Debian) - faster than Xdebug
+sudo apt-get install php-pcov
+
+# Or install via PECL
+pecl install pcov
+echo "extension=pcov.so" | sudo tee /etc/php/8.2/cli/conf.d/20-pcov.ini
+```
+
+Once installed, run coverage:
+
+```bash
+cd backend
+
+# Terminal coverage summary
+composer test:coverage
+
+# Generate HTML coverage report
+composer test:coverage-html
+
+# View report in browser (opens coverage-report/index.html)
+```
+
+The HTML report provides:
+- Line-by-line coverage highlighting
+- Method and class coverage percentages
+- Uncovered code identification
+
+Coverage configuration is in `phpunit.xml`:
+- Source: `app/` directory
+- Excludes: Console, Exceptions, Providers (framework boilerplate)
+- Reports: HTML, text summary, and Clover XML
 
 ---
 
