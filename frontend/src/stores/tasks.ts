@@ -23,7 +23,7 @@ export const useTasksStore = defineStore('tasks', () => {
     const grouped: Record<TaskStatus, Task[]> = {
       todo: [],
       in_progress: [],
-      in_review: [],
+      review: [],
       done: [],
       blocked: []
     }

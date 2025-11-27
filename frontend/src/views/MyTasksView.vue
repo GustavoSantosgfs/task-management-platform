@@ -27,7 +27,7 @@ const statusOptions: { value: TaskStatus | ''; label: string }[] = [
   { value: '', label: 'All Statuses' },
   { value: 'todo', label: 'To Do' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'in_review', label: 'In Review' },
+  { value: 'review', label: 'In Review' },
   { value: 'done', label: 'Done' },
   { value: 'blocked', label: 'Blocked' }
 ]
@@ -82,7 +82,7 @@ function getStatusClass(status: string): string {
   const classes: Record<string, string> = {
     todo: 'bg-secondary',
     in_progress: 'bg-primary',
-    in_review: 'bg-warning',
+    review: 'bg-warning',
     done: 'bg-success',
     blocked: 'bg-danger'
   }

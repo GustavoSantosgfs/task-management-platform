@@ -22,7 +22,7 @@ interface Column {
 const columns: Column[] = [
   { status: 'todo', title: 'To Do', color: '#6c757d' },
   { status: 'in_progress', title: 'In Progress', color: '#0d6efd' },
-  { status: 'in_review', title: 'In Review', color: '#ffc107' },
+  { status: 'review', title: 'In Review', color: '#ffc107' },
   { status: 'done', title: 'Done', color: '#198754' },
   { status: 'blocked', title: 'Blocked', color: '#dc3545' }
 ]
@@ -31,7 +31,7 @@ const tasksByStatus = computed(() => {
   const grouped: Record<TaskStatus, Task[]> = {
     todo: [],
     in_progress: [],
-    in_review: [],
+    review: [],
     done: [],
     blocked: []
   }

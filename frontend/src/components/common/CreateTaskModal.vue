@@ -31,7 +31,7 @@ const errors = ref<Record<string, string[]>>({})
 const statusOptions: { value: TaskStatus; label: string }[] = [
   { value: 'todo', label: 'To Do' },
   { value: 'in_progress', label: 'In Progress' },
-  { value: 'in_review', label: 'In Review' },
+  { value: 'review', label: 'In Review' },
   { value: 'done', label: 'Done' },
   { value: 'blocked', label: 'Blocked' }
 ]
