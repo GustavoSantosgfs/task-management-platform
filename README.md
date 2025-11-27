@@ -293,7 +293,6 @@ All data is automatically scoped by `orgId` from the JWT token:
 This project includes interactive API documentation powered by **Swagger/OpenAPI**:
 
 - **Swagger UI:** http://localhost:8000/api/documentation
-- **OpenAPI JSON:** http://localhost:8000/docs
 
 Features:
 - Browse all available endpoints
@@ -301,10 +300,9 @@ Features:
 - Test API calls directly from the browser
 - JWT Bearer token authentication support
 
-To regenerate documentation after code changes:
-```bash
-cd backend
-php artisan l5-swagger:generate
+The API specification is maintained in a separate YAML file for clean controller code:
+```
+backend/storage/api-docs/api-docs.yaml
 ```
 
 ### Base URL
