@@ -520,47 +520,46 @@ Frontend stores JWT in localStorage with automatic:
 
 ## Testing
 
-The project includes comprehensive API integration tests using PHPUnit with Laravel's testing utilities.
+The project includes comprehensive tests using PHPUnit with Laravel's testing utilities, covering both unit tests for business logic and integration tests for API endpoints.
 
 ### Test Coverage
 
-| Test Suite | Tests | Assertions |
-|------------|-------|------------|
-| AuthControllerTest | 17 | - |
-| NotificationControllerTest | 17 | - |
-| ProjectControllerTest | 28 | - |
-| TaskControllerTest | 30 | - |
-| **Total** | **92** | **286** |
+#### Unit Tests (Service Layer)
+| Test Suite | Tests | Description |
+|------------|-------|-------------|
+| JwtServiceTest | 11 | Token encoding, decoding, validation, expiration |
+| AuthServiceTest | 14 | Login, token validation, user sync, role handling |
+| ProjectServiceTest | 21 | Access control, member management, CRUD logic |
+| TaskServiceTest | 29 | Task operations, dependencies, comments, permissions |
+| NotificationServiceTest | 20 | Notification CRUD, helper methods |
+| **Unit Total** | **95** | |
+
+#### Integration Tests (API Endpoints)
+| Test Suite | Tests | Description |
+|------------|-------|-------------|
+| AuthControllerTest | 17 | Authentication endpoints |
+| NotificationControllerTest | 17 | Notification endpoints |
+| ProjectControllerTest | 28 | Project CRUD + members |
+| TaskControllerTest | 30 | Task CRUD + dependencies + comments |
+| **Integration Total** | **92** | |
+
+| **Grand Total** | **187 tests** | **481 assertions** |
 
 ### Test Categories
 
-**Authentication Tests:**
-- Login with valid/invalid credentials
-- Token validation and expiration
-- Role-based authentication (admin, project_manager, member)
-- Multi-organization user login
+**Unit Tests (Business Logic):**
+- JWT token creation, validation, and expiration
+- Authentication flow with mock users and database users
+- Project access control (admin, manager, member roles)
+- Task dependency management with circular dependency detection
+- Comment ownership validation
+- Notification helper methods
 
-**Project Tests:**
-- CRUD operations (create, read, update, delete)
-- Filtering by status, visibility
-- Pagination
-- Member management (add, remove)
-- Soft delete and restore
-- Role-based access control
-
-**Task Tests:**
-- CRUD operations within projects
-- Filtering by status, priority
-- Assignee management
-- Task dependencies (add, remove, self-reference prevention)
-- Task comments (CRUD)
-- My Tasks endpoint
-
-**Notification Tests:**
-- List and filter notifications
-- Mark as read/unread
-- Delete notifications
-- User isolation (users only see own notifications)
+**Integration Tests (API Endpoints):**
+- Authentication: Login, logout, token validation
+- Projects: CRUD, filtering, member management, soft delete/restore
+- Tasks: CRUD, filtering, dependencies, comments
+- Notifications: List, mark read/unread, delete
 
 ### Running Tests
 
@@ -810,13 +809,12 @@ Given more time, the following enhancements would be prioritized:
 ### Medium Priority
 3. **Caching Layer** - Redis caching for frequently accessed data
 4. **Activity Feed** - Expose activity logs via API
-5. **Unit Tests** - Additional unit tests for services and repositories
 
 ### Nice to Have
-6. **@mentions** - Parse and notify mentioned users in comments
-7. **File Attachments** - S3 integration for task attachments
-8. **Email Notifications** - Queue-based email delivery
-9. **Skeleton Loaders** - Better loading UX in frontend
+5. **@mentions** - Parse and notify mentioned users in comments
+6. **File Attachments** - S3 integration for task attachments
+7. **Email Notifications** - Queue-based email delivery
+8. **Skeleton Loaders** - Better loading UX in frontend
 
 ---
 
