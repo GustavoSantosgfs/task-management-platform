@@ -30,7 +30,10 @@ class ProjectRepository extends BaseRepository implements ProjectRepositoryInter
         $query = $this->model
             ->where('organization_id', $organizationId)
             ->with(['manager', 'members'])
-            ->withCount('tasks');
+            ->withCount([
+                'tasks',
+                'tasks as completed_tasks_count' => fn ($q) => $q->where('status', 'done')
+            ]);
 
         return $this->applyFilters($query, $filters)->paginate($perPage);
     }
@@ -45,7 +48,10 @@ class ProjectRepository extends BaseRepository implements ProjectRepositoryInter
         $query = $this->model
             ->where('organization_id', $organizationId)
             ->with(['manager', 'members'])
-            ->withCount('tasks');
+            ->withCount([
+                'tasks',
+                'tasks as completed_tasks_count' => fn ($q) => $q->where('status', 'done')
+            ]);
 
         // Members can only see public projects or projects they're members of
         if ($role === 'member') {

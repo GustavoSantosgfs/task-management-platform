@@ -75,6 +75,7 @@ function handleCloseTaskModal(): void {
 
 function handleTaskUpdated(): void {
   tasksStore.fetchTasks(projectId.value, { per_page: 100 })
+  projectsStore.refreshCurrentProjectStats()
 }
 
 function handleCreateTask(status: TaskStatus): void {
@@ -85,10 +86,14 @@ function handleCreateTask(status: TaskStatus): void {
 function handleTaskCreated(): void {
   showCreateTaskModal.value = false
   tasksStore.fetchTasks(projectId.value, { per_page: 100 })
+  projectsStore.refreshCurrentProjectStats()
 }
 
 function handleStatusChange(taskId: number, newStatus: TaskStatus): void {
   tasksStore.updateTask(projectId.value, taskId, { status: newStatus })
+    .then(() => {
+      projectsStore.refreshCurrentProjectStats()
+    })
 }
 
 function formatDate(dateString: string | null): string {

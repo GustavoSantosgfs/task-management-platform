@@ -42,6 +42,13 @@ class ProjectController extends Controller
             $perPage
         );
 
+        $projects->through(function ($project) {
+            $project->progress_percentage = $project->tasks_count > 0
+                ? round(($project->completed_tasks_count / $project->tasks_count) * 100, 2)
+                : 0;
+            return $project;
+        });
+
         return $this->paginatedResponse(
             $projects->through(fn ($project) => new ProjectResource($project)),
             'Projects retrieved successfully'

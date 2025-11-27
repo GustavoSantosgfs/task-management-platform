@@ -218,6 +218,22 @@ export const useProjectsStore = defineStore('projects', () => {
     currentProject.value = null
   }
 
+  function refreshCurrentProjectStats(): Promise<void> {
+    if (!currentProject.value) return Promise.resolve()
+
+    return projectsApi.getProject(currentProject.value.id)
+      .then((response) => {
+        if (response.success) {
+          currentProject.value = response.data
+
+          const index = projects.value.findIndex(p => p.id === response.data.id)
+          if (index !== -1) {
+            projects.value[index] = response.data
+          }
+        }
+      })
+  }
+
   return {
     projects,
     currentProject,
@@ -234,6 +250,7 @@ export const useProjectsStore = defineStore('projects', () => {
     restoreProject,
     addMember,
     removeMember,
-    clearCurrentProject
+    clearCurrentProject,
+    refreshCurrentProjectStats
   }
 })
