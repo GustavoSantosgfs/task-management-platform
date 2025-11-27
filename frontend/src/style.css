@@ -86,6 +86,10 @@ body.modal-open {
   background-color: #dc3545;
 }
 
+.badge-status-backlog {
+  background-color: #adb5bd;
+}
+
 .badge-status-todo {
   background-color: #6c757d;
 }

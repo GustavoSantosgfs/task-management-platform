@@ -80,7 +80,7 @@ export interface Task {
   deleted_at: string | null
 }
 
-export type TaskStatus = 'todo' | 'in_progress' | 'review' | 'done' | 'blocked'
+export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done' | 'blocked'
 export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
 
 export interface CreateTaskData {

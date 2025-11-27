@@ -25,6 +25,7 @@ const filters = computed<TaskFilters>(() => ({
 
 const statusOptions: { value: TaskStatus | ''; label: string }[] = [
   { value: '', label: 'All Statuses' },
+  { value: 'backlog', label: 'Backlog' },
   { value: 'todo', label: 'To Do' },
   { value: 'in_progress', label: 'In Progress' },
   { value: 'review', label: 'In Review' },
@@ -80,6 +81,7 @@ function handleQuickStatusChange(task: Task, newStatus: TaskStatus): void {
 
 function getStatusClass(status: string): string {
   const classes: Record<string, string> = {
+    backlog: 'bg-light text-dark',
     todo: 'bg-secondary',
     in_progress: 'bg-primary',
     review: 'bg-warning',

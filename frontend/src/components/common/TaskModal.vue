@@ -35,6 +35,7 @@ const canEdit = computed(() => {
 })
 
 const statusOptions: { value: TaskStatus; label: string; color: string }[] = [
+  { value: 'backlog', label: 'Backlog', color: '#adb5bd' },
   { value: 'todo', label: 'To Do', color: '#6c757d' },
   { value: 'in_progress', label: 'In Progress', color: '#0d6efd' },
   { value: 'review', label: 'In Review', color: '#ffc107' },

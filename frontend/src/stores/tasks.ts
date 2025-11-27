@@ -21,6 +21,7 @@ export const useTasksStore = defineStore('tasks', () => {
 
   const tasksByStatus = computed(() => {
     const grouped: Record<TaskStatus, Task[]> = {
+      backlog: [],
       todo: [],
       in_progress: [],
       review: [],
