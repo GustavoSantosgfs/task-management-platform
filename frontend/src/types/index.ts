@@ -81,7 +81,7 @@ export interface Task {
 }
 
 export type TaskStatus = 'backlog' | 'todo' | 'in_progress' | 'review' | 'done' | 'blocked'
-export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent'
+export type TaskPriority = 'low' | 'medium' | 'high' | 'critical'
 
 export interface CreateTaskData {
   title: string

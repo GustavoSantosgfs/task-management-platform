@@ -38,7 +38,7 @@ const priorityOptions: { value: TaskPriority | ''; label: string }[] = [
   { value: 'low', label: 'Low' },
   { value: 'medium', label: 'Medium' },
   { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' }
+  { value: 'critical', label: 'Critical' }
 ]
 
 onMounted(() => {
@@ -96,7 +96,7 @@ function getPriorityClass(priority: string): string {
     low: 'bg-secondary',
     medium: 'bg-info',
     high: 'bg-warning',
-    urgent: 'bg-danger'
+    critical: 'bg-danger'
   }
   return classes[priority] || 'bg-secondary'
 }

@@ -72,7 +72,7 @@ function getPriorityClass(priority: string): string {
     low: 'bg-secondary',
     medium: 'bg-info',
     high: 'bg-warning',
-    urgent: 'bg-danger'
+    critical: 'bg-danger'
   }
   return classes[priority] || 'bg-secondary'
 }
