@@ -290,20 +290,18 @@ npm install
 
 ## Running the Application
 
-### Option 1: Full Stack (Recommended)
+### Option 1: Docker (Recommended)
 
 ```bash
-cd backend
-composer dev
+docker compose up -d
 ```
 
-This starts concurrently:
-- Laravel backend on `http://localhost:8000`
-- Queue worker for background jobs
-- Laravel Pail for log streaming
-- Vue frontend on `http://localhost:5173`
+Access:
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8000/api
+- **Swagger Docs:** http://localhost:8000/api/documentation
 
-### Option 2: Separate Terminals
+### Option 2: Local Development (Without Docker)
 
 **Terminal 1 - Backend:**
 ```bash
@@ -317,8 +315,7 @@ cd frontend
 npm run dev
 ```
 
-### Access the Application
-
+Access:
 - **Frontend:** http://localhost:5173
 - **Backend API:** http://localhost:8000/api
 
@@ -893,13 +890,8 @@ Once installed, run coverage:
 ```bash
 cd backend
 
-# Terminal coverage summary
-composer test:coverage
-
-# Generate HTML coverage report
-composer test:coverage-html
-
-# View report in browser (opens coverage-report/index.html)
+# Run tests with coverage report
+php artisan test --coverage
 ```
 
 The HTML report provides:
@@ -1151,22 +1143,32 @@ Given more time, the following enhancements would be prioritized:
 
 ## Commands Reference
 
-### Backend
+### Docker
 
 ```bash
-composer setup          # Full setup (install, key, migrate, seed)
-composer dev            # Start all services concurrently
-composer test           # Run PHPUnit tests
-./vendor/bin/pint       # Format code (PSR-12)
-php artisan migrate:fresh --seed  # Reset database
+docker compose up -d              # Start all services
+docker compose down               # Stop all services
+docker compose logs -f backend    # View backend logs
+docker compose exec backend sh    # Shell into backend
+docker compose up -d --build      # Rebuild and restart
 ```
 
-### Frontend
+### Backend (Local Development)
 
 ```bash
+composer install                  # Install dependencies
+php artisan serve                 # Start development server
+php artisan test                  # Run PHPUnit tests
+php artisan migrate:fresh --seed  # Reset database
+./vendor/bin/pint                 # Format code (PSR-12)
+```
+
+### Frontend (Local Development)
+
+```bash
+npm install             # Install dependencies
 npm run dev             # Development server
 npm run build           # Production build
-npm run preview         # Preview production build
 npm run type-check      # TypeScript validation
 ```
 
