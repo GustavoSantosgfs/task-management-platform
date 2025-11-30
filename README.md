@@ -35,31 +35,71 @@ This platform provides:
 
 ## Architecture
 
+### System Architecture Diagram
+
+```mermaid
+flowchart TB
+    subgraph Client["Client Layer"]
+        Browser["Browser"]
+    end
+
+    subgraph Frontend["Frontend (Vue 3 + TypeScript)"]
+        Views["Views/Pages"]
+        Components["Components"]
+        Stores["Pinia Stores"]
+        API["API Layer (Axios)"]
+    end
+
+    subgraph Backend["Backend (Laravel 12)"]
+        Middleware["JWT Middleware"]
+        Controllers["API Controllers"]
+        Services["Service Layer"]
+        Repositories["Repository Layer"]
+        Resources["API Resources"]
+    end
+
+    subgraph Data["Data Layer"]
+        MySQL[("MySQL 8.0")]
+        Redis[("Redis 7.x")]
+    end
+
+    Browser --> Views
+    Views <--> Stores
+    Stores <--> API
+    Components --> Views
+
+    API -->|"HTTP/REST"| Middleware
+    Middleware --> Controllers
+    Controllers --> Services
+    Services --> Repositories
+    Repositories --> MySQL
+    Controllers --> Resources
+
+    Services <-->|"Cache/Session/Queue"| Redis
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                         Frontend (Vue 3)                        │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────────────┐ │
-│  │  Views   │  │  Stores  │  │   API    │  │    Components    │ │
-│  │  (Pages) │◄─┤  (Pinia) │◄─┤  Layer   │  │  (Common/Layout) │ │
-│  └──────────┘  └──────────┘  └────┬─────┘  └──────────────────┘ │
-└───────────────────────────────────┼─────────────────────────────┘
-                                    │ HTTP/REST
-┌───────────────────────────────────▼─────────────────────────────┐
-│                       Backend (Laravel 12)                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐ │
-│  │  Controllers │──│   Services   │──│     Repositories       │ │
-│  │  (API Layer) │  │(Business Log)│  │    (Data Access)       │ │
-│  └──────────────┘  └──────────────┘  └───────────┬────────────┘ │
-│  ┌──────────────┐  ┌──────────────┐              │              │
-│  │  Middleware  │  │  Resources   │              │              │
-│  │  (JWT Auth)  │  │ (Transform)  │              │              │
-│  └──────────────┘  └──────────────┘              │              │
-└──────────────────────────────────────────────────┼──────────────┘
-                                                   │
-┌──────────────────────────────────────────────────▼──────────────┐
-│                      Database (MySQL/SQLite)                     │
-│  organizations, users, projects, tasks, notifications, etc.     │
-└─────────────────────────────────────────────────────────────────┘
+
+### Request Flow
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant M as JWT Middleware
+    participant Ctrl as Controller
+    participant S as Service
+    participant R as Repository
+    participant DB as MySQL
+
+    C->>M: HTTP Request + JWT Token
+    M->>M: Validate Token
+    M->>Ctrl: Authenticated Request
+    Ctrl->>Ctrl: Validate Input (FormRequest)
+    Ctrl->>S: Business Operation
+    S->>R: Data Query
+    R->>DB: Eloquent Query
+    DB-->>R: Results
+    R-->>S: Model/Collection
+    S-->>Ctrl: Processed Data
+    Ctrl-->>C: JSON Response (Resource)
 ```
 
 ### Backend Structure
@@ -477,26 +517,118 @@ Authorization: Bearer <token>
 
 ## Database Schema
 
-### Entity Relationship Overview
+### Entity Relationship Diagram
 
-```
-organizations
-    │
-    ├──< organization_users >── users
-    │
-    └──< projects
-            │
-            ├──< project_members >── users
-            │
-            └──< tasks
-                    │
-                    ├──< task_comments
-                    │
-                    └──< task_dependencies (self-referencing)
+```mermaid
+erDiagram
+    organizations ||--o{ organization_users : has
+    organizations ||--o{ projects : contains
+    users ||--o{ organization_users : belongs_to
+    users ||--o{ project_members : assigned_to
+    users ||--o{ tasks : assigned
+    users ||--o{ task_comments : writes
+    users ||--o{ notifications : receives
 
-notifications ──> users
+    projects ||--o{ project_members : has
+    projects ||--o{ tasks : contains
 
-activity_logs ──> (polymorphic to any model)
+    tasks ||--o{ task_comments : has
+    tasks ||--o{ task_dependencies : depends_on
+    tasks ||--o{ task_dependencies : blocked_by
+
+    organizations {
+        bigint id PK
+        string name
+        string slug UK
+        text description
+        timestamp created_at
+        timestamp updated_at
+        timestamp deleted_at
+    }
+
+    users {
+        bigint id PK
+        string name
+        string email UK
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    organization_users {
+        bigint id PK
+        bigint organization_id FK
+        bigint user_id FK
+        enum role "admin|project_manager|member"
+        timestamp created_at
+    }
+
+    projects {
+        bigint id PK
+        bigint organization_id FK
+        bigint created_by FK
+        string name
+        text description
+        enum status "planning|active|on_hold|completed"
+        enum visibility "public|private"
+        date start_date
+        date end_date
+        timestamp deleted_at
+    }
+
+    project_members {
+        bigint id PK
+        bigint project_id FK
+        bigint user_id FK
+        timestamp created_at
+    }
+
+    tasks {
+        bigint id PK
+        bigint project_id FK
+        bigint assignee_id FK
+        bigint created_by FK
+        string title
+        text description
+        enum status "backlog|todo|in_progress|review|done|blocked"
+        enum priority "low|medium|high|critical"
+        datetime due_date
+        timestamp deleted_at
+    }
+
+    task_comments {
+        bigint id PK
+        bigint task_id FK
+        bigint user_id FK
+        text content
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    task_dependencies {
+        bigint id PK
+        bigint task_id FK
+        bigint depends_on_task_id FK
+        timestamp created_at
+    }
+
+    notifications {
+        bigint id PK
+        bigint user_id FK
+        string type
+        json data
+        timestamp read_at
+        timestamp created_at
+    }
+
+    activity_logs {
+        bigint id PK
+        string subject_type
+        bigint subject_id
+        bigint user_id FK
+        string action
+        json changes
+        timestamp created_at
+    }
 ```
 
 ### Core Tables
@@ -558,24 +690,111 @@ Optimized indexes for common query patterns:
 
 ## Security
 
+### Security Architecture
+
+```mermaid
+flowchart TB
+    subgraph Client["Client (Browser)"]
+        LocalStorage["localStorage (JWT)"]
+        Axios["Axios Interceptor"]
+    end
+
+    subgraph Security["Security Layer"]
+        CORS["CORS Middleware"]
+        JWT["JWT Authentication"]
+        RBAC["Role-Based Access Control"]
+        Validation["Input Validation"]
+    end
+
+    subgraph Protection["Data Protection"]
+        ORM["Eloquent ORM (SQL Injection Prevention)"]
+        Escape["Output Escaping (XSS Prevention)"]
+        SoftDelete["Soft Deletes (Data Preservation)"]
+    end
+
+    LocalStorage --> Axios
+    Axios -->|"Bearer Token"| CORS
+    CORS --> JWT
+    JWT -->|"Decode & Verify"| RBAC
+    RBAC -->|"Check Permissions"| Validation
+    Validation -->|"Sanitized Input"| ORM
+    ORM --> SoftDelete
+    Escape -->|"Safe Output"| Axios
+```
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant U as User
+    participant F as Frontend
+    participant A as Auth Controller
+    participant J as JWT Service
+    participant DB as Database
+
+    U->>F: Enter credentials
+    F->>A: POST /auth/login
+    A->>DB: Verify user exists
+    DB-->>A: User data
+    A->>J: Generate JWT
+    J-->>A: Signed token (HS256)
+    A-->>F: Token + User payload
+    F->>F: Store in localStorage
+
+    Note over F,A: Subsequent Requests
+    F->>A: Request + Bearer Token
+    A->>J: Validate token
+    J->>J: Check signature & expiry
+    J-->>A: Decoded payload (sub, role, orgId)
+    A->>A: Scope queries by orgId
+    A-->>F: Protected resource
+```
+
 ### Implemented Measures
 
-| Measure | Implementation |
-|---------|----------------|
-| **JWT Authentication** | Signed tokens with expiration |
-| **CORS Configuration** | Restricted to frontend origin |
-| **Input Validation** | Form Request classes validate all input |
-| **SQL Injection Prevention** | Eloquent ORM with parameterized queries |
-| **XSS Prevention** | Laravel's automatic output escaping |
-| **Soft Deletes** | Data preservation, no hard deletes |
-| **Role-Based Access** | Middleware and request authorization |
+| Measure | Implementation | Layer |
+|---------|----------------|-------|
+| **JWT Authentication** | HS256 signed tokens with configurable TTL | Authentication |
+| **CORS Configuration** | Whitelist frontend origin only | Network |
+| **Input Validation** | Laravel Form Request classes | Application |
+| **SQL Injection Prevention** | Eloquent ORM parameterized queries | Database |
+| **XSS Prevention** | Automatic output escaping | Response |
+| **CSRF Protection** | SPA uses JWT (stateless) | Application |
+| **Soft Deletes** | Data preservation, audit trail | Database |
+| **Role-Based Access** | 3-tier: Admin > PM > Member | Authorization |
+| **Multi-Tenancy** | Organization scoping via JWT orgId | Data Isolation |
+
+### Authorization Matrix
+
+| Action | Member | Project Manager | Admin |
+|--------|--------|-----------------|-------|
+| View assigned tasks | ✅ | ✅ | ✅ |
+| Update own tasks | ✅ | ✅ | ✅ |
+| View project (public) | ✅ | ✅ | ✅ |
+| View project (private) | Members only | ✅ | ✅ |
+| Create tasks | ❌ | ✅ | ✅ |
+| Assign tasks | ❌ | ✅ | ✅ |
+| Manage project members | ❌ | ✅ | ✅ |
+| Create projects | ❌ | ✅ | ✅ |
+| Archive projects | ❌ | ✅ | ✅ |
+| Organization settings | ❌ | ❌ | ✅ |
 
 ### Token Storage
 
 Frontend stores JWT in localStorage with automatic:
 - Token injection via Axios interceptor
 - 401 response handling (auto-logout)
-- Token refresh consideration for production
+- Token expiration check before requests
+
+### Security Best Practices Applied
+
+1. **No sensitive data in JWT** - Only user ID, email, role, and org ID
+2. **Short token lifetime** - Configurable TTL (default 60 minutes)
+3. **Parameterized queries** - All database operations via Eloquent ORM
+4. **Input sanitization** - Laravel Form Requests validate all input
+5. **Output encoding** - Blade/JSON responses auto-escaped
+6. **Audit logging** - Activity logs track sensitive operations
+7. **Soft deletes** - No permanent data loss, maintains history
 
 ---
 
