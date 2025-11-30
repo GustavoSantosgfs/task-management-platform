@@ -149,7 +149,7 @@ paths:
           description: Filter by status
           schema:
             type: string
-            enum: [active, on_hold, completed, archived]
+            enum: [planning, active, on_hold, completed]
         - name: visibility
           in: query
           description: Filter by visibility
@@ -171,7 +171,7 @@ paths:
           description: Sort field
           schema:
             type: string
-            enum: [name, created_at, updated_at]
+            enum: [title, created_at, updated_at]
         - name: sort_direction
           in: query
           description: Sort direction
@@ -210,9 +210,9 @@ paths:
             schema:
               type: object
               required:
-                - name
+                - title
               properties:
-                name:
+                title:
                   type: string
                   example: New Project
                 description:
@@ -220,7 +220,7 @@ paths:
                   example: Project description
                 status:
                   type: string
-                  enum: [active, on_hold, completed]
+                  enum: [planning, active, on_hold, completed]
                   example: active
                 visibility:
                   type: string
@@ -288,13 +288,13 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                title:
                   type: string
                 description:
                   type: string
                 status:
                   type: string
-                  enum: [active, on_hold, completed]
+                  enum: [planning, active, on_hold, completed]
                 visibility:
                   type: string
                   enum: [public, private]
@@ -476,7 +476,7 @@ paths:
           description: Filter by status
           schema:
             type: string
-            enum: [backlog, in_progress, review, completed]
+            enum: [backlog, todo, in_progress, review, done, blocked]
         - name: priority
           in: query
           description: Filter by priority
@@ -549,7 +549,7 @@ paths:
                   type: string
                 status:
                   type: string
-                  enum: [backlog, in_progress, review, completed]
+                  enum: [backlog, todo, in_progress, review, done, blocked]
                 priority:
                   type: string
                   enum: [low, medium, high, critical]
@@ -558,8 +558,6 @@ paths:
                 due_date:
                   type: string
                   format: date
-                estimated_hours:
-                  type: number
       responses:
         '201':
           description: Task created successfully
@@ -628,7 +626,7 @@ paths:
                   type: string
                 status:
                   type: string
-                  enum: [backlog, in_progress, review, completed]
+                  enum: [backlog, todo, in_progress, review, done, blocked]
                 priority:
                   type: string
                   enum: [low, medium, high, critical]
@@ -637,8 +635,6 @@ paths:
                 due_date:
                   type: string
                   format: date
-                estimated_hours:
-                  type: number
       responses:
         '200':
           description: Task updated successfully
