@@ -109,7 +109,8 @@ frontend/src/
 |------------|---------|---------|
 | PHP | 8.2+ | Runtime |
 | Laravel | 12.x | Framework |
-| MySQL/SQLite | 8.0+/3 | Database |
+| MySQL | 8.0+ | Database |
+| Redis | 7.x | Cache, Sessions, Queues |
 | JWT | - | Authentication |
 
 ### Frontend
@@ -122,10 +123,22 @@ frontend/src/
 | Vite | 6.x | Build Tool |
 | Bootstrap | 5.x | CSS Framework |
 
+### Infrastructure
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Docker | 20.10+ | Containerization |
+| Docker Compose | v2 | Multi-container orchestration |
+| Nginx | Alpine | Web server (production) |
+
 ---
 
 ## Prerequisites
 
+### For Docker Setup (Recommended)
+- **Docker** 20.10+ and Docker Compose v2
+- **Git**
+
+### For Local Setup
 - **PHP** 8.2 or higher
 - **Composer** 2.x
 - **Node.js** 18+ and npm
@@ -143,7 +156,55 @@ git clone <repository-url>
 cd task-management-platform
 ```
 
-### 2. Backend Setup
+### 2. Docker Setup (Recommended)
+
+The easiest way to run the application is with Docker:
+
+```bash
+# Copy environment file
+cp .env.example .env
+
+# Start all services (MySQL, Redis, Backend, Frontend)
+docker compose up -d
+
+# First run only: seed the database
+docker compose exec backend php artisan db:seed
+```
+
+**Services:**
+| Service | URL | Description |
+|---------|-----|-------------|
+| Frontend | http://localhost:3000 | Vue.js application |
+| Backend API | http://localhost:8000 | Laravel API |
+| Swagger Docs | http://localhost:8000/api/documentation | API documentation |
+| MySQL | localhost:3307 | Database (exposed for external tools) |
+
+**Docker Commands:**
+```bash
+docker compose up -d            # Start all services
+docker compose down             # Stop all services
+docker compose logs -f          # View logs (all services)
+docker compose logs backend     # View backend logs
+docker compose exec backend sh  # Shell into backend container
+docker compose up -d --build    # Rebuild and restart
+```
+
+**Environment Variables (.env):**
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `FRONTEND_PORT` | 3000 | Frontend port |
+| `BACKEND_PORT` | 8000 | Backend API port |
+| `DB_PORT` | 3307 | MySQL exposed port |
+| `AUTO_MIGRATE` | true | Run migrations on startup |
+| `AUTO_SEED` | false | Run seeders on startup |
+
+> **Note:** Set `AUTO_SEED=true` only for the first deployment, then set it back to `false` to avoid duplicate entry errors on container restart.
+
+---
+
+### 3. Local Setup (Without Docker)
+
+#### Backend Setup
 
 ```bash
 cd backend
@@ -857,17 +918,15 @@ Given more time, the following enhancements would be prioritized:
 
 ### High Priority
 1. **WebSocket Integration** - Real-time notifications via Laravel Echo
-2. **Docker Setup** - Dockerfile and docker-compose for containerization
 
 ### Medium Priority
-3. **Caching Layer** - Redis caching for frequently accessed data
-4. **Activity Feed** - Expose activity logs via API
+2. **Activity Feed** - Expose activity logs via API
 
 ### Nice to Have
-5. **@mentions** - Parse and notify mentioned users in comments
-6. **File Attachments** - S3 integration for task attachments
-7. **Email Notifications** - Queue-based email delivery
-8. **Skeleton Loaders** - Better loading UX in frontend
+3. **@mentions** - Parse and notify mentioned users in comments
+4. **File Attachments** - S3 integration for task attachments
+5. **Email Notifications** - Queue-based email delivery
+6. **Skeleton Loaders** - Better loading UX in frontend
 
 ---
 

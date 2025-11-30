@@ -1,0 +1,79 @@
+# =============================================================================
+# Task Management Platform - Development Docker Compose Override
+# =============================================================================
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up -d
+# =============================================================================
+
+services:
+  # ---------------------------------------------------------------------------
+  # MySQL Database (Development)
+  # ---------------------------------------------------------------------------
+  mysql:
+    ports:
+      - "3306:3306"
+
+  # ---------------------------------------------------------------------------
+  # Laravel Backend (Development with hot reload)
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      AUTO_MIGRATE: "true"
+      AUTO_SEED: "true"
+    volumes:
+      - ./backend:/var/www/html
+      - /var/www/html/vendor
+    command: php artisan serve --host=0.0.0.0 --port=8000
+
+  # ---------------------------------------------------------------------------
+  # Vue.js Frontend (Development with Vite HMR)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+
+  # ---------------------------------------------------------------------------
+  # Mailhog for email testing (Development only)
+  # ---------------------------------------------------------------------------
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: taskmanager-mailhog
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - taskmanager-network
+
+  # ---------------------------------------------------------------------------
+  # phpMyAdmin for database management (Development only)
+  # ---------------------------------------------------------------------------
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: taskmanager-phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+    ports:
+      - "8080:80"
+    depends_on:
+      - mysql
+    networks:
+      - taskmanager-network
